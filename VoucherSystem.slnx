@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VoucherSystem.Api/VoucherSystem.Api.csproj" />
+    <Project Path="src/VoucherSystem.Application/VoucherSystem.Application.csproj" />
+    <Project Path="src/VoucherSystem.Contracts/VoucherSystem.Contracts.csproj" />
+    <Project Path="src/VoucherSystem.Domain/VoucherSystem.Domain.csproj" />
+    <Project Path="src/VoucherSystem.Infrastructure/VoucherSystem.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VoucherSystem.UnitTests/VoucherSystem.UnitTests.csproj" />
+  </Folder>
+</Solution>
