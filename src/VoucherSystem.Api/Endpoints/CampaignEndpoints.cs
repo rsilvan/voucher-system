@@ -1,18 +1,18 @@
 using VoucherSystem.Contracts;
-using VoucherSystem.Contracts.Promotions;
+using VoucherSystem.Contracts.Campaigns;
 using VoucherSystem.Application;
 using VoucherSystem.Api.Middleware;
 
 namespace VoucherSystem.Api.Endpoints;
 
-public static class PromotionEndpoints
+public static class CampaignEndpoints
 {
-    public static void MapPromotionEndpoints(this WebApplication app)
+    public static void MapCampaignEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/projects/{projectId:guid}/promotions");
+        var group = app.MapGroup("/api/projects/{projectId:guid}/campaigns");
 
-        // List promotions
-        group.MapGet("/", async (Guid projectId, IPromotionService service, HttpContext ctx,
+        // List campaigns
+        group.MapGet("/", async (Guid projectId, ICampaignService service, HttpContext ctx,
             int page = 1, int pageSize = 20, string? status = null) =>
         {
             var userCtx = ctx.GetUserContext();
@@ -20,22 +20,22 @@ public static class PromotionEndpoints
             return Results.Ok(result);
         }).RequireAuthorization().RequirePermission("campaigns.read");
 
-        // Get promotion by ID
-        group.MapGet("/{id:guid}", async (Guid projectId, Guid id, IPromotionService service, HttpContext ctx) =>
+        // Get campaign by ID
+        group.MapGet("/{id:guid}", async (Guid projectId, Guid id, ICampaignService service, HttpContext ctx) =>
         {
             var userCtx = ctx.GetUserContext();
             var result = await service.GetByIdAsync(userCtx.OrganizationId, projectId, id);
             return result is null ? Results.NotFound() : Results.Ok(result);
         }).RequireAuthorization().RequirePermission("campaigns.read");
 
-        // Create promotion with discount definitions
-        group.MapPost("/", async (Guid projectId, CreatePromotionRequest request, IPromotionService service, HttpContext ctx) =>
+        // Create campaign
+        group.MapPost("/", async (Guid projectId, CreateCampaignRequest request, ICampaignService service, HttpContext ctx) =>
         {
             var userCtx = ctx.GetUserContext();
             try
             {
                 var result = await service.CreateAsync(userCtx.OrganizationId, projectId, request, userCtx.UserId);
-                return Results.Created($"/api/projects/{projectId}/promotions/{result.Id}", result);
+                return Results.Created($"/api/projects/{projectId}/campaigns/{result.Id}", result);
             }
             catch (ArgumentException ex)
             {
@@ -43,18 +43,25 @@ public static class PromotionEndpoints
             }
         }).RequireAuthorization().RequirePermission("campaigns.create");
 
-        // Update promotion
-        group.MapPatch("/{id:guid}", async (Guid projectId, Guid id, UpdatePromotionRequest request,
-            IPromotionService service, HttpContext ctx) =>
+        // Update campaign
+        group.MapPatch("/{id:guid}", async (Guid projectId, Guid id, UpdateCampaignRequest request,
+            ICampaignService service, HttpContext ctx) =>
         {
             var userCtx = ctx.GetUserContext();
-            var result = await service.UpdateAsync(userCtx.OrganizationId, projectId, id, request, userCtx.UserId);
-            return result is null ? Results.NotFound() : Results.Ok(result);
+            try
+            {
+                var result = await service.UpdateAsync(userCtx.OrganizationId, projectId, id, request, userCtx.UserId);
+                return result is null ? Results.NotFound() : Results.Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new ErrorResponse { Error = ex.Message });
+            }
         }).RequireAuthorization().RequirePermission("campaigns.update");
 
-        // Promotion actions
+        // Campaign actions (activate, pause, end, archive, publish)
         group.MapPost("/{id:guid}/actions/{action}", async (Guid projectId, Guid id, string action,
-            PromotionActionRequest request, IPromotionService service, HttpContext ctx) =>
+            CampaignActionRequest request, ICampaignService service, HttpContext ctx) =>
         {
             var userCtx = ctx.GetUserContext();
             try
@@ -72,27 +79,12 @@ public static class PromotionEndpoints
             }
         }).RequireAuthorization().RequirePermission("campaigns.update");
 
-        // Delete (archive) promotion
-        group.MapDelete("/{id:guid}", async (Guid projectId, Guid id, IPromotionService service, HttpContext ctx) =>
+        // Delete (archive) campaign
+        group.MapDelete("/{id:guid}", async (Guid projectId, Guid id, ICampaignService service, HttpContext ctx) =>
         {
             var userCtx = ctx.GetUserContext();
             var ok = await service.DeleteAsync(userCtx.OrganizationId, projectId, id);
             return ok ? Results.NoContent() : Results.NotFound();
         }).RequireAuthorization().RequirePermission("campaigns.delete");
-
-        // Preview discount calculation
-        group.MapPost("/preview", async (Guid projectId, PromotionPreviewRequest request, IPromotionService service, HttpContext ctx) =>
-        {
-            var userCtx = ctx.GetUserContext();
-            try
-            {
-                var result = await service.PreviewAsync(userCtx.OrganizationId, projectId, request, userCtx.UserId);
-                return Results.Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(new ErrorResponse { Error = ex.Message });
-            }
-        }).RequireAuthorization().RequirePermission("campaigns.read");
     }
 }

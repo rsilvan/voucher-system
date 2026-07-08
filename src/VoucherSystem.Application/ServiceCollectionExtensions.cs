@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGeoLocationService, GeoLocationService>();
         services.AddScoped<IStoreService, StoreService>();
         services.AddScoped<IAreaService, AreaService>();
+        services.AddScoped<ICampaignService, CampaignService>();
+        services.AddScoped<IVoucherService, VoucherService>();
+        services.AddScoped<IPromotionService, PromotionService>();
         return services;
     }
 }

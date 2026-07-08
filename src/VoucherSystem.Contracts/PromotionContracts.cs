@@ -1,87 +1,167 @@
-using VoucherSystem.Domain;
-
 namespace VoucherSystem.Contracts.Promotions;
 
-public class PromotionPlanResponse
+public class PromotionResponse
 {
-    public List<PromotionPlanItemResponse> Items { get; set; } = new();
-    public bool HasConflicts { get; set; }
-    public bool HasUnsupported { get; set; }
-}
-
-public class PromotionPlanItemResponse
-{
-    public string ResourceType { get; set; } = default!;
-    public string SourceName { get; set; } = default!;
-    public string? SourceId { get; set; }
-    public string Action { get; set; } = default!;
-    public string? Detail { get; set; }
+    public Guid Id { get; set; }
+    public Guid OrganizationId { get; set; }
+    public Guid ProjectId { get; set; }
+    public Guid? CampaignId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public string Type { get; set; } = default!;
+    public string Status { get; set; } = default!;
+    public int Priority { get; set; }
+    public DateTimeOffset? StartAt { get; set; }
+    public DateTimeOffset? EndAt { get; set; }
+    public string? Metadata { get; set; }
+    public Guid CreatedBy { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
+    public uint RowVersion { get; set; }
+    public List<DiscountDefinitionResponse> DiscountDefinitions { get; set; } = new();
 }
 
 public class CreatePromotionRequest
 {
-    public Guid TargetProjectId { get; set; }
+    public string Name { get; set; } = default!;
+    public string? Description { get; set; }
+    public string Type { get; set; } = "Automatic";
+    public int Priority { get; set; }
+    public DateTimeOffset? StartAt { get; set; }
+    public DateTimeOffset? EndAt { get; set; }
+    public string? Metadata { get; set; }
+    public List<CreateDiscountDefinitionRequest> DiscountDefinitions { get; set; } = new();
     public string? IdempotencyKey { get; set; }
-    public List<string> ResourceTypes { get; set; } = new() { "BrandProfile" };
 }
 
-public class PromotionJobResponse
+public class UpdatePromotionRequest
 {
-    public Guid Id { get; set; }
-    public Guid SourceProjectId { get; set; }
-    public Guid TargetProjectId { get; set; }
-    public string Status { get; set; } = default!;
-    public string? PlanJson { get; set; }
-    public string? ResultJson { get; set; }
-    public string? ErrorMessage { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset? CompletedAt { get; set; }
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Type { get; set; }
+    public int? Priority { get; set; }
+    public DateTimeOffset? StartAt { get; set; }
+    public DateTimeOffset? EndAt { get; set; }
+    public string? Metadata { get; set; }
+    public uint RowVersion { get; set; }
+}
+
+public class PromotionListResponse
+{
+    public List<PromotionSummaryResponse> Items { get; set; } = new();
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
 }
 
 public class PromotionSummaryResponse
 {
-    public int TotalCampaigns { get; set; }
-    public int TotalVouchers { get; set; }
-    public int TotalValidations { get; set; }
-    public int TotalRedemptions { get; set; }
-    public int TotalFailed { get; set; }
-}
-
-public class UsageResponse
-{
-    public int ActiveProjects { get; set; }
-    public int TotalProjects { get; set; }
-    public int ActiveCampaigns { get; set; }
-    public int CurrentApiCalls { get; set; }
-    public int MaxProjects { get; set; }
-    public int MaxCampaigns { get; set; }
-    public int MaxApiCalls { get; set; }
-}
-
-public class PromotionDiffResponse
-{
-    public Guid JobId { get; set; }
+    public Guid Id { get; set; }
+    public string Name { get; set; } = default!;
+    public string Type { get; set; } = default!;
     public string Status { get; set; } = default!;
-    public List<PromotionDiffItem> Items { get; set; } = new();
+    public int Priority { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 }
 
-public class PromotionDiffItem
+// ─── Discount Definition ───
+
+public class DiscountDefinitionResponse
 {
-    public string ResourceType { get; set; } = default!;
-    public string Action { get; set; } = default!;
-    public string? SourceId { get; set; }
-    public string? SourceName { get; set; }
-    public string? TargetId { get; set; }
-    public string? Detail { get; set; }
-    public string Status { get; set; } = default!; // "planned", "completed", "pending"
+    public Guid Id { get; set; }
+    public string DiscountType { get; set; } = default!;
+    public string ValueType { get; set; } = default!;
+    public decimal Value { get; set; }
+    public decimal? MaxDiscount { get; set; }
+    public decimal? MinPurchase { get; set; }
+    public string ApplyTo { get; set; } = default!;
+    public string? ItemScope { get; set; }
+    public int? BuyXQuantity { get; set; }
+    public int? GetYQuantity { get; set; }
+    public decimal? GetYDiscountPercent { get; set; }
+    public List<DiscountTierResponse> Tiers { get; set; } = new();
 }
 
-public class PromotionProgressResponse
+public class CreateDiscountDefinitionRequest
 {
-    public Guid JobId { get; set; }
+    public string DiscountType { get; set; } = "Percentage";
+    public string ValueType { get; set; } = "Percentage";
+    public decimal Value { get; set; }
+    public decimal? MaxDiscount { get; set; }
+    public decimal? MinPurchase { get; set; }
+    public string ApplyTo { get; set; } = "Order";
+    public string? ItemScope { get; set; }
+    public int? BuyXQuantity { get; set; }
+    public int? GetYQuantity { get; set; }
+    public decimal? GetYDiscountPercent { get; set; }
+    public List<CreateDiscountTierRequest> Tiers { get; set; } = new();
+}
+
+public class DiscountTierResponse
+{
+    public Guid Id { get; set; }
+    public decimal FromValue { get; set; }
+    public decimal? ToValue { get; set; }
+    public decimal DiscountValue { get; set; }
+    public string DiscountType { get; set; } = default!;
+}
+
+public class CreateDiscountTierRequest
+{
+    public decimal FromValue { get; set; }
+    public decimal? ToValue { get; set; }
+    public decimal DiscountValue { get; set; }
+    public string DiscountType { get; set; } = "Percentage";
+}
+
+// ─── Promotion Action ───
+
+public class PromotionActionRequest
+{
+    public string Reason { get; set; } = string.Empty;
+    public string? IdempotencyKey { get; set; }
+    public string? Metadata { get; set; }
+}
+
+public class PromotionActionResponse
+{
+    public string OperationId { get; set; } = default!;
     public string Status { get; set; } = default!;
-    public int TotalSteps { get; set; }
-    public int CompletedSteps { get; set; }
-    public int FailedSteps { get; set; }
-    public int PendingSteps { get; set; }
+    public List<string> Events { get; set; } = new();
+}
+
+// ─── Promotion Preview ───
+
+public class PromotionPreviewRequest
+{
+    public string? OrderContext { get; set; } // JSON
+    public decimal OrderTotal { get; set; }
+    public string Currency { get; set; } = "BRL";
+    public List<PromotionPreviewItem> Items { get; set; } = new();
+}
+
+public class PromotionPreviewItem
+{
+    public string Sku { get; set; } = default!;
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
+    public string? Category { get; set; }
+}
+
+public class PromotionPreviewResponse
+{
+    public decimal OriginalTotal { get; set; }
+    public decimal TotalDiscount { get; set; }
+    public decimal FinalTotal { get; set; }
+    public string Currency { get; set; } = default!;
+    public List<CalculatedDiscountItem> Discounts { get; set; } = new();
+}
+
+public class CalculatedDiscountItem
+{
+    public Guid PromotionId { get; set; }
+    public string PromotionName { get; set; } = default!;
+    public string Type { get; set; } = default!;
+    public decimal DiscountAmount { get; set; }
+    public string? Description { get; set; }
 }

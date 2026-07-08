@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VoucherSystem.Infrastructure;
@@ -11,9 +12,11 @@ using VoucherSystem.Infrastructure;
 namespace VoucherSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(VoucherSystemDbContext))]
-    partial class VoucherSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708032007_R008R009R010")]
+    partial class R008R009R010
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

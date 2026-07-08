@@ -21,6 +21,9 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IBrandRepository, BrandRepository>();
         services.AddScoped<IStoreRepository, StoreRepository>();
         services.AddScoped<IAreaRepository, AreaRepository>();
+        services.AddScoped<ICampaignRepository, CampaignRepository>();
+        services.AddScoped<IVoucherRepository, VoucherRepository>();
+        services.AddScoped<IPromotionRepository, PromotionRepository>();
         services.AddSingleton<IPermissionCache>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();

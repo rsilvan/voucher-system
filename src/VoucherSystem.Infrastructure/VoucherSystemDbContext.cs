@@ -29,6 +29,26 @@ public class VoucherSystemDbContext : DbContext
     public DbSet<Area> Areas => Set<Area>();
     public DbSet<AreaStore> AreaStores => Set<AreaStore>();
 
+    // R008 — Campaigns
+    public DbSet<Campaign> Campaigns => Set<Campaign>();
+    public DbSet<CampaignVersion> CampaignVersions => Set<CampaignVersion>();
+    public DbSet<CampaignTemplate> CampaignTemplates => Set<CampaignTemplate>();
+    public DbSet<CampaignCategory> CampaignCategories => Set<CampaignCategory>();
+    public DbSet<CampaignApproval> CampaignApprovals => Set<CampaignApproval>();
+
+    // R009 — Vouchers
+    public DbSet<Voucher> Vouchers => Set<Voucher>();
+    public DbSet<VoucherBatch> VoucherBatches => Set<VoucherBatch>();
+    public DbSet<VoucherPattern> VoucherPatterns => Set<VoucherPattern>();
+    public DbSet<VoucherLifecycleEvent> VoucherLifecycleEvents => Set<VoucherLifecycleEvent>();
+    public DbSet<VoucherRedemption> VoucherRedemptions => Set<VoucherRedemption>();
+
+    // R010 — Promotions
+    public DbSet<Promotion> Promotions => Set<Promotion>();
+    public DbSet<DiscountDefinition> DiscountDefinitions => Set<DiscountDefinition>();
+    public DbSet<DiscountTier> DiscountTiers => Set<DiscountTier>();
+    public DbSet<PromotionPreview> PromotionPreviews => Set<PromotionPreview>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -286,6 +306,186 @@ public class VoucherSystemDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ───────── R008 — Campaigns ─────────
+
+        modelBuilder.Entity<Campaign>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.Type).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Timezone).HasMaxLength(64);
+            e.Property(x => x.Currency).HasMaxLength(3);
+            e.Property(x => x.RecurrenceRule).HasMaxLength(500);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.Property(x => x.RowVersion).IsRowVersion();
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.Status });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<CampaignVersion>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Config).HasColumnType("jsonb");
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.CampaignId, x.Version });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        modelBuilder.Entity<CampaignTemplate>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(2000);
+            e.Property(x => x.Type).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Config).HasColumnType("jsonb");
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        modelBuilder.Entity<CampaignCategory>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(500);
+            e.Property(x => x.Color).HasMaxLength(7);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<CampaignApproval>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Reason).HasMaxLength(1000);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.CampaignId, x.Status });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        // ───────── R009 — Vouchers ─────────
+
+        modelBuilder.Entity<Voucher>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Code).HasMaxLength(100).IsRequired();
+            e.Property(x => x.CodeMasked).HasMaxLength(100);
+            e.Property(x => x.Type).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.DiscountType).HasMaxLength(50);
+            e.Property(x => x.Currency).HasMaxLength(3);
+            e.Property(x => x.ApplyTo).HasMaxLength(50);
+            e.Property(x => x.HolderId).HasMaxLength(200);
+            e.Property(x => x.HolderEmail).HasMaxLength(254);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.Property(x => x.RowVersion).IsRowVersion();
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.Code }).IsUnique();
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.Status });
+            e.HasIndex(x => x.CampaignId);
+            e.HasIndex(x => x.BatchId);
+        });
+
+        modelBuilder.Entity<VoucherBatch>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(2000);
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.PatternConfig).HasColumnType("jsonb");
+            e.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+            e.HasIndex(x => x.Status);
+        });
+
+        modelBuilder.Entity<VoucherPattern>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(2000);
+            e.Property(x => x.Prefix).HasMaxLength(20);
+            e.Property(x => x.Suffix).HasMaxLength(20);
+            e.Property(x => x.Charset).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Pattern).HasMaxLength(200);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        modelBuilder.Entity<VoucherLifecycleEvent>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.EventType).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(1000);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.VoucherId, x.CreatedAt });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        modelBuilder.Entity<VoucherRedemption>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.CustomerId).HasMaxLength(200);
+            e.Property(x => x.OrderId).HasMaxLength(200);
+            e.Property(x => x.Currency).HasMaxLength(3);
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.IdempotencyKey).HasMaxLength(200);
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+            e.HasIndex(x => x.IdempotencyKey).IsUnique().HasFilter("\"IdempotencyKey\" IS NOT NULL");
+            e.HasIndex(x => x.VoucherId);
+        });
+
+        // ───────── R010 — Promotions ─────────
+
+        modelBuilder.Entity<Promotion>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Description).HasMaxLength(4000);
+            e.Property(x => x.Type).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.Property(x => x.RowVersion).IsRowVersion();
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.Status });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId, x.CreatedAt });
+            e.HasIndex(x => x.CampaignId);
+        });
+
+        modelBuilder.Entity<DiscountDefinition>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.DiscountType).HasMaxLength(50).IsRequired();
+            e.Property(x => x.ValueType).HasMaxLength(50).IsRequired();
+            e.Property(x => x.ApplyTo).HasMaxLength(50).IsRequired();
+            e.Property(x => x.ItemScope).HasColumnType("jsonb");
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.PromotionId, x.DiscountType });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        modelBuilder.Entity<DiscountTier>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.DiscountType).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.DiscountDefinitionId, x.FromValue });
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+        });
+
+        modelBuilder.Entity<PromotionPreview>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.OrderContext).HasColumnType("jsonb");
+            e.Property(x => x.CalculatedDiscounts).HasColumnType("jsonb");
+            e.Property(x => x.Currency).HasMaxLength(3);
+            e.Property(x => x.ItemBreakdown).HasColumnType("jsonb");
+            e.Property(x => x.Metadata).HasColumnType("jsonb");
+            e.HasIndex(x => new { x.OrganizationId, x.ProjectId });
+            e.HasIndex(x => x.PromotionId);
         });
     }
 }

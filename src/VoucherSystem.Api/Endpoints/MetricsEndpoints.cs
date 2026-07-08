@@ -1,10 +1,25 @@
 using Microsoft.EntityFrameworkCore;
 using VoucherSystem.Api.Middleware;
 using VoucherSystem.Contracts;
-using VoucherSystem.Contracts.Promotions;
+using VoucherSystem.Domain;
 using VoucherSystem.Infrastructure;
 
 namespace VoucherSystem.Api.Endpoints;
+
+public class ProjectSummaryResponse
+{
+    public int TotalCampaigns { get; set; }
+    public int TotalVouchers { get; set; }
+    public int TotalRedemptions { get; set; }
+    public int TotalActivePromotions { get; set; }
+}
+
+public class UsageResponse
+{
+    public int ActiveProjects { get; set; }
+    public int TotalProjects { get; set; }
+    public int MaxProjects { get; set; }
+}
 
 public static class MetricsEndpoints
 {
@@ -24,29 +39,30 @@ public static class MetricsEndpoints
             {
                 var userCtx = ctx.GetUserContext();
 
-                // Verify project exists and belongs to organization
                 var projectExists = await db.Projects
                     .AnyAsync(p => p.Id == projectId && p.OrganizationId == userCtx.OrganizationId);
 
                 if (!projectExists)
                     return Results.NotFound(new ErrorResponse { Error = "Project not found." });
 
-                // Count active campaigns (BrandProfile = 1 per project, counts as a campaign)
-                var activeCampaigns = await db.BrandProfiles
-                    .LongCountAsync(b => b.ProjectId == projectId);
+                var activeCampaigns = await db.Campaigns
+                    .LongCountAsync(c => c.ProjectId == projectId && c.Status == "Active");
 
-                // Total vouchers — future entity, currently always 0
-                // Total validations — future entity, currently always 0
-                // Total redemptions — future entity, currently always 0
-                // Total failed — future entity, currently always 0
+                var totalVouchers = await db.Vouchers
+                    .LongCountAsync(v => v.ProjectId == projectId && v.Status != "PendingDeletion");
 
-                return Results.Ok(new PromotionSummaryResponse
+                var totalRedemptions = await db.Set<VoucherRedemption>()
+                    .LongCountAsync(r => r.ProjectId == projectId);
+
+                var activePromotions = await db.Promotions
+                    .LongCountAsync(p => p.ProjectId == projectId && p.Status == "Active");
+
+                return Results.Ok(new ProjectSummaryResponse
                 {
                     TotalCampaigns = (int)activeCampaigns,
-                    TotalVouchers = 0,
-                    TotalValidations = 0,
-                    TotalRedemptions = 0,
-                    TotalFailed = 0,
+                    TotalVouchers = (int)totalVouchers,
+                    TotalRedemptions = (int)totalRedemptions,
+                    TotalActivePromotions = (int)activePromotions,
                 });
             }
             catch (Exception ex)
@@ -68,7 +84,6 @@ public static class MetricsEndpoints
             {
                 var userCtx = ctx.GetUserContext();
 
-                // Verify project exists and belongs to organization
                 var project = await db.Projects
                     .FirstOrDefaultAsync(p => p.Id == projectId && p.OrganizationId == userCtx.OrganizationId);
 
@@ -77,15 +92,12 @@ public static class MetricsEndpoints
 
                 var orgId = userCtx.OrganizationId;
 
-                // Count active projects
                 var activeProjects = await db.Projects
                     .LongCountAsync(p => p.OrganizationId == orgId && p.Status == "Active");
 
-                // Count all projects
                 var totalProjects = await db.Projects
                     .LongCountAsync(p => p.OrganizationId == orgId);
 
-                // Get max projects from the organization's plan
                 var maxProjects = 0;
                 var plan = await (
                     from org in db.Organizations

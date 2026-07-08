@@ -4,10 +4,16 @@ namespace VoucherSystem.Application;
 
 public interface IPromotionService
 {
-    Task<PromotionPlanResponse> GetPlanAsync(Guid organizationId, Guid sourceProjectId, Guid targetProjectId);
-    Task<PromotionJobResponse> CreatePromotionAsync(Guid organizationId, Guid sourceProjectId, CreatePromotionRequest request, Guid actorId);
-    Task<PromotionJobResponse?> GetJobAsync(Guid organizationId, Guid jobId);
-    Task<List<PromotionJobResponse>> GetJobsAsync(Guid organizationId, Guid projectId);
-    Task<PromotionDiffResponse> GetPromotionDiffAsync(Guid organizationId, Guid jobId);
-    Task<bool> CancelJobAsync(Guid organizationId, Guid jobId);
+    // Promotion CRUD
+    Task<PromotionResponse> CreateAsync(Guid organizationId, Guid projectId, CreatePromotionRequest request, Guid userId);
+    Task<PromotionResponse?> GetByIdAsync(Guid organizationId, Guid projectId, Guid id);
+    Task<PromotionListResponse> GetListAsync(Guid organizationId, Guid projectId, int page, int pageSize, string? status);
+    Task<PromotionResponse?> UpdateAsync(Guid organizationId, Guid projectId, Guid id, UpdatePromotionRequest request, Guid userId);
+    Task<bool> DeleteAsync(Guid organizationId, Guid projectId, Guid id);
+
+    // Actions
+    Task<PromotionActionResponse> ExecuteActionAsync(Guid organizationId, Guid projectId, Guid id, string action, PromotionActionRequest request, Guid userId);
+
+    // Preview
+    Task<PromotionPreviewResponse> PreviewAsync(Guid organizationId, Guid projectId, PromotionPreviewRequest request, Guid userId);
 }
