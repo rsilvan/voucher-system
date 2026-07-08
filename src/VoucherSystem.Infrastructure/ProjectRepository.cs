@@ -27,6 +27,18 @@ public class ProjectRepository : IProjectRepository
 
     public async Task<List<Project>> GetByMemberAsync(Guid organizationId, Guid memberId)
     {
+        // Check if member has a system role that grants full project access
+        var memberRole = await _db.OrganizationMembers
+            .Where(m => m.Id == memberId && m.OrganizationId == organizationId)
+            .Join(_db.Roles, m => m.RoleId, r => r.Id, (m, r) => r)
+            .FirstOrDefaultAsync();
+
+        if (memberRole is not null &&
+            (memberRole.Key == "OrganizationOwner" || memberRole.Key == "OrganizationAdmin"))
+        {
+            return await GetByOrganizationAsync(organizationId);
+        }
+
         var memberProjectIds = await _db.ProjectAccesses
             .Where(pa => pa.OrganizationMemberId == memberId)
             .Select(pa => pa.ProjectId)

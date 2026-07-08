@@ -11,6 +11,9 @@ import Stores from './pages/Stores';
 import Areas from './pages/Areas';
 import GeoLocations from './pages/GeoLocations';
 import AuditLogs from './pages/AuditLogs';
+import Campaigns from './pages/Campaigns';
+import Vouchers from './pages/Vouchers';
+import Promotions from './pages/Promotions';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -100,6 +103,9 @@ function AppRoutes() {
         <Route path="members" element={<Members />} />
         <Route path="roles" element={<Roles />} />
         <Route path="projects" element={<Projects />} />
+        <Route path="campaigns" element={<Campaigns />} />
+        <Route path="vouchers" element={<Vouchers />} />
+        <Route path="promotions" element={<Promotions />} />
         <Route path="brand" element={<BrandWrapper />} />
         <Route path="stores" element={<StoresWrapper />} />
         <Route path="areas" element={<AreasWrapper />} />
