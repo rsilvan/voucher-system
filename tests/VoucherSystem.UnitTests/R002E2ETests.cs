@@ -23,7 +23,7 @@ public class R002E2ETests
     {
         // Arrange
         var orgRepoMock = new Mock<IOrganizationRepository>();
-        var service = new OrganizationService(orgRepoMock.Object);
+        var service = new OrganizationService(orgRepoMock.Object, new Mock<IEmailService>().Object);
 
         var request = new CreateOrganizationRequest
         {

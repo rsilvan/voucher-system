@@ -14,7 +14,7 @@ public class MemberServiceTests
     public MemberServiceTests()
     {
         _repoMock = new Mock<IMemberRepository>();
-        _service = new MemberService(_repoMock.Object);
+        _service = new MemberService(_repoMock.Object, new Mock<IEmailService>().Object);
     }
 
     [Fact]

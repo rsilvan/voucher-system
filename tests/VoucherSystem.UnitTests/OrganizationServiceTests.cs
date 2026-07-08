@@ -14,7 +14,7 @@ public class OrganizationServiceTests
     public OrganizationServiceTests()
     {
         _repoMock = new Mock<IOrganizationRepository>();
-        _service = new OrganizationService(_repoMock.Object);
+        _service = new OrganizationService(_repoMock.Object, new Mock<IEmailService>().Object);
     }
 
     [Fact]

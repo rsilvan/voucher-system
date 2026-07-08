@@ -107,7 +107,7 @@ public class SecurityTests
             Audience = "VoucherSystem",
             AccessTokenExpirationMinutes = 15
         };
-        var service = new AuthService(repoMock.Object, Options.Create(settings));
+        var service = new AuthService(repoMock.Object, Options.Create(settings), new Mock<IEmailService>().Object);
 
         var revokedToken = new RefreshToken
         {
@@ -141,7 +141,7 @@ public class SecurityTests
             Audience = "VoucherSystem",
             AccessTokenExpirationMinutes = 15
         };
-        var service = new AuthService(repoMock.Object, Options.Create(settings));
+        var service = new AuthService(repoMock.Object, Options.Create(settings), new Mock<IEmailService>().Object);
 
         var expiredToken = new RefreshToken
         {
@@ -170,7 +170,7 @@ public class SecurityTests
     {
         // Arrange
         var repoMock = new Mock<IMemberRepository>();
-        var service = new MemberService(repoMock.Object);
+        var service = new MemberService(repoMock.Object, new Mock<IEmailService>().Object);
 
         var expiredInvitation = new Invitation
         {
@@ -219,7 +219,7 @@ public class SecurityTests
             Audience = "VoucherSystem",
             AccessTokenExpirationMinutes = 15
         };
-        var service = new AuthService(repoMock.Object, Options.Create(settings));
+        var service = new AuthService(repoMock.Object, Options.Create(settings), new Mock<IEmailService>().Object);
 
         repoMock.Setup(r => r.GetUserByEmailAsync("unknown@test.com"))
             .ReturnsAsync((User?)null);
@@ -325,7 +325,7 @@ public class SecurityTests
     {
         // Arrange
         var repoMock = new Mock<IMemberRepository>();
-        var service = new MemberService(repoMock.Object);
+        var service = new MemberService(repoMock.Object, new Mock<IEmailService>().Object);
         var orgId = Guid.NewGuid();
         var inviteId = Guid.NewGuid();
 
@@ -356,7 +356,7 @@ public class SecurityTests
     {
         // Arrange
         var repoMock = new Mock<IMemberRepository>();
-        var service = new MemberService(repoMock.Object);
+        var service = new MemberService(repoMock.Object, new Mock<IEmailService>().Object);
         var orgId = Guid.NewGuid();
         var inviteId = Guid.NewGuid();
 

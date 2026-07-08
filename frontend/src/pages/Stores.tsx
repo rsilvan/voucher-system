@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import type { StoreResponse, StoreSummaryResponse } from '../lib/types';
+import type { StoreSummaryResponse } from '../lib/types';
 
 export default function StoresPage({ projectId }: { projectId?: string }) {
   const pid = projectId || localStorage.getItem('currentProjectId') || '';

@@ -8,10 +8,12 @@ namespace VoucherSystem.Application;
 public class MemberService : IMemberService
 {
     private readonly IMemberRepository _repo;
+    private readonly IEmailService _emailService;
 
-    public MemberService(IMemberRepository repo)
+    public MemberService(IMemberRepository repo, IEmailService emailService)
     {
         _repo = repo;
+        _emailService = emailService;
     }
 
     public async Task<InviteMemberResponse> InviteMemberAsync(Guid organizationId, Guid invitedByUserId, InviteMemberRequest request)
@@ -56,6 +58,9 @@ public class MemberService : IMemberService
         {
             await _repo.SaveInvitationProjectAccessAsync(invitation.Id, request.ProjectIds);
         }
+
+        await _emailService.SendInvitationEmailAsync(invitation.Email, invitation.Name, tokenString, 
+            (await _repo.GetOrganizationNameAsync(organizationId)) ?? "Organization");
 
         return new InviteMemberResponse
         {
@@ -205,6 +210,9 @@ public class MemberService : IMemberService
         var expiresAt = now.AddDays(7);
 
         await _repo.UpdateInvitationTokenAsync(invitationId, tokenHash, expiresAt);
+
+        await _emailService.SendInvitationEmailAsync(invitation.Email, invitation.Name, tokenString,
+            (await _repo.GetOrganizationNameAsync(invitation.OrganizationId)) ?? "Organization");
 
         return (tokenString, expiresAt);
     }

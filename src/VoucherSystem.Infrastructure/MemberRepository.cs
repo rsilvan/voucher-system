@@ -149,4 +149,12 @@ public class MemberRepository : IMemberRepository
             .Select(ipa => ipa.ProjectId)
             .ToListAsync();
     }
+
+    public async Task<string?> GetOrganizationNameAsync(Guid organizationId)
+    {
+        return await _db.Organizations
+            .Where(o => o.Id == organizationId)
+            .Select(o => o.Name)
+            .FirstOrDefaultAsync();
+    }
 }

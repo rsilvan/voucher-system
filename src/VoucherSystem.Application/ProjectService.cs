@@ -61,8 +61,8 @@ public class ProjectService : IProjectService
             throw new ArgumentException("A project with this name already exists.");
 
         var activeCount = await _repo.GetActiveCountAsync(organizationId);
-        if (activeCount >= 1) // Quota check — MVP limit
-            throw new InvalidOperationException("Project quota exceeded (max 1 active project in MVP).");
+        if (activeCount >= 5) // Quota check — MVP limit (plan-based enforcement WIP)
+            throw new InvalidOperationException("Project quota exceeded (max 5 active projects in MVP).");
 
         var now = DateTimeOffset.UtcNow;
         var isFirst = activeCount == 0;

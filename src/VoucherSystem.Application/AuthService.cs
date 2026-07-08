@@ -14,14 +14,16 @@ public class AuthService : IAuthService
 {
     private readonly IAuthRepository _authRepo;
     private readonly JwtSettings _jwt;
+    private readonly IEmailService _emailService;
     private static readonly Meter AuthMeter = new("VoucherSystem.Auth");
     private static readonly Counter<int> LoginAttempts = AuthMeter.CreateCounter<int>("login_attempts_total", description: "Total login attempts");
     private static readonly Counter<int> AuthErrors = AuthMeter.CreateCounter<int>("auth_errors_total", description: "Total authentication errors");
 
-    public AuthService(IAuthRepository authRepo, IOptions<JwtSettings> jwtOptions)
+    public AuthService(IAuthRepository authRepo, IOptions<JwtSettings> jwtOptions, IEmailService emailService)
     {
         _authRepo = authRepo;
         _jwt = jwtOptions.Value;
+        _emailService = emailService;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request, string? ipAddress, string? userAgent)
@@ -162,16 +164,18 @@ public class AuthService : IAuthService
         var user = await _authRepo.GetUserByEmailAsync(normalizedEmail);
         if (user == null) return;
 
+        var rawToken = Guid.NewGuid().ToString("N");
         var token = new PasswordResetToken
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
-            TokenHash = HashToken(Guid.NewGuid().ToString("N")),
+            TokenHash = HashToken(rawToken),
             ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             CreatedAt = DateTimeOffset.UtcNow
         };
         await _authRepo.SavePasswordResetTokenAsync(token);
-        // In production, send email with token here
+
+        await _emailService.SendPasswordResetEmailAsync(user.Email, rawToken);
     }
 
     public async Task ResetPasswordAsync(ResetPasswordRequest request)
@@ -202,7 +206,8 @@ public class AuthService : IAuthService
             new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Name, user.Name),
             new("organization_id", organization.Id.ToString()),
-            new("project_id", organization.Id.ToString()), // owner has access to org's projects
+            // project_id is intentionally omitted here — resolved dynamically
+            // by ProjectContextMiddleware via X-Project-Id header or primary project lookup
             new("member_id", member.Id.ToString()),
             new("role_id", member.RoleId.ToString())
         };

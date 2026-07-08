@@ -9,6 +9,8 @@ export default function Register() {
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,15 +21,26 @@ export default function Register() {
     setSuccess('');
     setLoading(true);
     try {
-      await register(organizationName, adminName, adminEmail, adminPassword);
+      await register(
+        organizationName,
+        adminName,
+        adminEmail,
+        adminPassword,
+        confirmPassword,
+        acceptedTerms,
+      );
       setSuccess('Organização cadastrada com sucesso! Redirecionando para o login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: unknown) {
       const message =
         err instanceof Object &&
-        (err as { response?: { data?: { message?: string } } }).response?.data
+        (err as { response?: { data?: { message?: string; error?: string } } }).response?.data
           ?.message;
-      setError(message || 'Falha ao cadastrar. Tente novamente.');
+      const errorMsg =
+        err instanceof Object &&
+        (err as { response?: { data?: { message?: string; error?: string } } }).response?.data
+          ?.error;
+      setError(errorMsg || message || 'Falha ao cadastrar. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -107,14 +120,47 @@ export default function Register() {
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
               required
+              minLength={8}
+              className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              placeholder="•••••••• (mín. 8 caracteres)"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              Confirmar Senha
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
               className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
               placeholder="••••••••"
             />
           </div>
 
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="acceptedTerms"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              required
+              className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="acceptedTerms" className="text-sm text-slate-400">
+              Aceito os{' '}
+              <a href="#" className="text-indigo-400 hover:text-indigo-300">termos de uso</a>
+              {' '}e a{' '}
+              <a href="#" className="text-indigo-400 hover:text-indigo-300">política de privacidade</a>
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !acceptedTerms}
             className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition duration-200"
           >
             {loading ? 'Cadastrando...' : 'Criar Organização'}

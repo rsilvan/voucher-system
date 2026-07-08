@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import type { ProjectSummary, ProjectListResponse, ProjectResponse, CreateProjectRequest, UpdateProjectRequest } from '../lib/types';
+import type { ProjectSummary, ProjectListResponse, CreateProjectRequest, UpdateProjectRequest } from '../lib/types';
 import { getStatusBadge, getEnvBadge, ENVIRONMENTS, CURRENCIES, TIMEZONES, LOCALES, COUNTRIES } from '../lib/types';
 
 export default function ProjectsPage() {

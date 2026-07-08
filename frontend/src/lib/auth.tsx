@@ -21,6 +21,8 @@ interface AuthContextType {
     adminName: string,
     adminEmail: string,
     adminPassword: string,
+    confirmPassword: string,
+    acceptedTerms: boolean,
   ) => Promise<void>;
   logout: () => void;
 }
@@ -77,12 +79,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       adminName: string,
       adminEmail: string,
       adminPassword: string,
+      confirmPassword: string,
+      acceptedTerms: boolean,
     ) => {
       await api.post('/self-service/organizations', {
         organizationName,
-        adminName,
-        adminEmail,
-        adminPassword,
+        responsibleName: adminName,
+        email: adminEmail,
+        password: adminPassword,
+        confirmPassword,
+        acceptedTerms,
+        acceptedPrivacyPolicy: acceptedTerms,
+        country: 'BR',
       });
     },
     [],

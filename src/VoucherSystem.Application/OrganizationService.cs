@@ -6,10 +6,12 @@ namespace VoucherSystem.Application;
 public class OrganizationService : IOrganizationService
 {
     private readonly IOrganizationRepository _organizationRepo;
+    private readonly IEmailService _emailService;
 
-    public OrganizationService(IOrganizationRepository organizationRepo)
+    public OrganizationService(IOrganizationRepository organizationRepo, IEmailService emailService)
     {
         _organizationRepo = organizationRepo;
+        _emailService = emailService;
     }
 
     public async Task<CreateOrganizationResponse> CreateOrganizationAsync(CreateOrganizationRequest request)
@@ -98,6 +100,8 @@ public class OrganizationService : IOrganizationService
         };
 
         await _organizationRepo.SaveOrganizationAsync(organization, user, project, member);
+
+        await _emailService.SendWelcomeEmailAsync(user.Email, user.Name, organization.Name);
 
         return new CreateOrganizationResponse
         {

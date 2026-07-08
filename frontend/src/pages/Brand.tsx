@@ -137,8 +137,8 @@ export default function BrandPage({ projectId }: { projectId?: string }) {
               <p className="text-sm text-slate-400 mb-2">Preview de cores</p>
               <div className="h-12 rounded-lg mb-2" style={{ background: `linear-gradient(135deg, ${brand.primaryColor || '#6366f1'}, ${brand.secondaryColor || '#8b5cf6'})` }} />
               <div className="flex gap-2">
-                <button className="px-3 py-1 text-xs text-white rounded" style={{ backgroundColor: brand.primaryColor }}>Primária</button>
-                <button className="px-3 py-1 text-xs text-white rounded" style={{ backgroundColor: brand.secondaryColor }}>Secundária</button>
+                <button className="px-3 py-1 text-xs text-white rounded" style={{ backgroundColor: brand.primaryColor ?? undefined }}>Primária</button>
+                <button className="px-3 py-1 text-xs text-white rounded" style={{ backgroundColor: brand.secondaryColor ?? undefined }}>Secundária</button>
               </div>
             </div>
           </div>

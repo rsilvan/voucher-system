@@ -20,4 +20,5 @@ public interface IMemberRepository
     Task<int> CountActiveMembersAsync(Guid organizationId);
     Task SaveNewUserMemberAsync(User user, OrganizationMember member);
     Task<List<Guid>> GetInvitationProjectIdsAsync(Guid invitationId);
+    Task<string?> GetOrganizationNameAsync(Guid organizationId);
 }

@@ -23,7 +23,7 @@ public class AuthServiceTests
             Audience = "VoucherSystem",
             AccessTokenExpirationMinutes = 15
         };
-        _service = new AuthService(_repoMock.Object, Options.Create(_jwtSettings));
+        _service = new AuthService(_repoMock.Object, Options.Create(_jwtSettings), new Mock<IEmailService>().Object);
     }
 
     [Fact]
