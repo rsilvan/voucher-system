@@ -1,40 +1,46 @@
-# R003 — Plataforma de APIs, Credenciais e OAuth
+# R026 — Portal Administrativo e Experiência Operacional
 
 ## 1. Objetivo de negócio
 
-Este requisito tem como objetivo oferecer APIs seguras, versionadas, rastreáveis e adequadas para integrações server-side, client-side e parceiros. O valor para o produto é criar uma base operacional confiável para campanhas promocionais, validações, resgates, análises e integrações API-first. Para os usuários, reduz dependência de desenvolvimento sob demanda, aumenta rastreabilidade, melhora governança e permite operação segura em ambiente multi-tenant.
+Este requisito tem como objetivo permitir que usuários configurem e operem o produto com segurança sem depender da API para atividades rotineiras. O valor para o produto é criar uma base operacional confiável para campanhas promocionais, validações, resgates, análises e integrações API-first. Para os usuários, reduz dependência de desenvolvimento sob demanda, aumenta rastreabilidade, melhora governança e permite operação segura em ambiente multi-tenant.
 
 ## 2. Escopo
 
 ### Incluído
-- API keys privadas, públicas e de integração.
-- scopes, expiração, rotação, revogação e IP allowlist.
-- OAuth 2.0 client credentials e authorization code futuro.
-- idempotency keys.
-- rate limits e quotas.
-- erros padronizados.
-- OpenAPI e portal do desenvolvedor.
-- headers operacionais de request e rate limit.
+- navegação por domínio e permissão.
+- project switcher.
+- builders de campanha, regra, distribuição e schema.
+- drafts, previews, confirmação e diff.
+- tabelas com paginação server-side.
+- filtros persistentes e exports.
+- loading, empty, error e retry states.
+- acessibilidade e responsividade.
+- localização e formatação por projeto.
+- feature flags e entitlements visíveis.
 
 ### Fora de escopo
-- Marketplace público de apps.
-- consentimento OAuth completo de usuário final.
-- monetização comercial de API.
-- SDKs oficiais.
+- aplicativo mobile nativo.
+- portal público para cliente final.
+- design system corporativo completo fora do produto.
+- editor no-code ilimitado.
 
 ## 3. Personas impactadas
 
-- Developer / Integrator
+- Organization Owner
 - Project Admin
-- Platform Admin
-- Auditor/Security
+- Campaign Manager
+- CRM/Growth Manager
+- Loyalty Manager
+- Analyst
+- Customer Service
+- Developer / Integrator
 
 ## 4. Fluxos funcionais
 
 Fluxo feliz:
 1. Ator autenticado seleciona organização e projeto válido.
 2. Sistema carrega permissões efetivas do ator e valida escopo.
-3. Ator cria ou consulta recurso de integração API-first, credenciais e autorização técnica com payload válido.
+3. Ator cria ou consulta recurso de frontend administrativo e operação com payload válido.
 4. Backend valida tenant, schema, estado, permissões e regras de negócio.
 5. Operação é persistida no PostgreSQL com transação e, se crítica, idempotência.
 6. Sistema grava audit log e outbox na mesma unidade de trabalho.
@@ -42,7 +48,7 @@ Fluxo feliz:
 8. Portal atualiza listagem/detalhe e registra timeline do recurso.
 
 Fluxos alternativos:
-1. Ator executa criação de credencial usando API key server-side; sistema aplica scopes e mesmo fluxo de auditoria.
+1. Ator executa controle visual por permissão usando API key server-side; sistema aplica scopes e mesmo fluxo de auditoria.
 2. Ator envia metadata extra; sistema valida conforme schema R022 e aceita/rejeita conforme modo do projeto.
 3. Operação é longa; sistema cria async action e permite acompanhamento de progresso.
 4. Recurso já existe por `source_id`; sistema executa upsert ou retorna conflito conforme endpoint.
@@ -55,11 +61,11 @@ Fluxos de erro:
 5. Erro interno retorna `500 internal_error` com correlationId, sem expor stack trace ao cliente.
 
 Permissões necessárias:
-- Leitura: `r003:read`.
-- Escrita: `r003:write`.
-- Execução de ação crítica: `r003:execute`.
-- Administração: `r003:admin`.
-- Auditoria/exportação: `r003:audit` ou `r003:export`.
+- Leitura: `r026:read`.
+- Escrita: `r026:write`.
+- Execução de ação crítica: `r026:execute`.
+- Administração: `r026:admin`.
+- Auditoria/exportação: `r026:audit` ou `r026:export`.
 
 Impactos em auditoria:
 - Registrar criação, alteração, mudança de status, ação crítica, erro de permissão e override.
@@ -69,13 +75,13 @@ Impactos em auditoria:
 ## 5. Regras de negócio
 
 - **RN-001 — Isolamento tenant-aware**  
-  Descrição: todo recurso de integração API-first, credenciais e autorização técnica deve pertencer a uma organização e, quando aplicável, a um projeto.  
+  Descrição: todo recurso de frontend administrativo e operação deve pertencer a uma organização e, quando aplicável, a um projeto.  
   Condição: qualquer criação, consulta, alteração ou exclusão.  
   Resultado esperado: somente dados do `account_id` e `project_id` do contexto autenticado são acessíveis.  
   Mensagem/erro: `403 forbidden` quando houver tentativa de acesso cruzado.
 
 - **RN-002 — Estado permitido antes da operação crítica**  
-  Descrição: operações como criação de credencial, rotação de segredo, validação de idempotency key só podem ocorrer em estados explicitamente permitidos.  
+  Descrição: operações como controle visual por permissão, submissão de formulário, preview/diff só podem ocorrer em estados explicitamente permitidos.  
   Condição: recurso em estado incompatível, arquivado, removido, suspenso ou bloqueado.  
   Resultado esperado: a operação é recusada sem efeito colateral.  
   Mensagem/erro: `422 invalid_state_transition`.
@@ -87,7 +93,7 @@ Impactos em auditoria:
   Mensagem/erro: `409 idempotency_payload_mismatch` quando a chave for reutilizada com payload diferente.
 
 - **RN-004 — Auditoria obrigatória**  
-  Descrição: alterações administrativas e ações críticas de integração API-first, credenciais e autorização técnica devem gerar audit log append-only.  
+  Descrição: alterações administrativas e ações críticas de frontend administrativo e operação devem gerar audit log append-only.  
   Condição: criação, alteração de status, publicação, exclusão lógica, override ou operação sensível.  
   Resultado esperado: registrar ator, entidade, antes/depois, correlationId, IP/origem e severidade.  
   Mensagem/erro: se auditoria falhar na mesma transação crítica, a operação deve falhar com `500 audit_write_failed`.
@@ -107,13 +113,13 @@ Impactos em auditoria:
 ## 6. Requisitos funcionais
 
 - **RF-001 — CRUD/listagem do domínio**  
-  Descrição: disponibilizar criação, edição permitida, consulta, listagem paginada e exclusão lógica dos recursos de integração API-first, credenciais e autorização técnica.  
+  Descrição: disponibilizar criação, edição permitida, consulta, listagem paginada e exclusão lógica dos recursos de frontend administrativo e operação.  
   Prioridade: Must.  
-  Dependências: R001, R002.  
+  Dependências: Todos os módulos expostos.  
   Critérios de aceite: endpoints retornam erros padronizados; filtros por status/data funcionam; acesso respeita tenant/projeto.
 
 - **RF-002 — Execução das ações críticas**  
-  Descrição: suportar ações de domínio como criação de credencial, rotação de segredo, validação de idempotency key, emissão de token OAuth, bloqueio por rate limit.  
+  Descrição: suportar ações de domínio como controle visual por permissão, submissão de formulário, preview/diff, paginação server-side, exibição de correlationId.  
   Prioridade: Must.  
   Dependências: permissões, auditoria e idempotência.  
   Critérios de aceite: cada ação valida estado, gera evento, gera audit log e retorna correlationId.
@@ -131,7 +137,7 @@ Impactos em auditoria:
   Critérios de aceite: filtros combinados funcionam com paginação; exportações grandes geram async action.
 
 - **RF-005 — Integração API-first**  
-  Descrição: todos os fluxos essenciais de integração API-first, credenciais e autorização técnica devem ser executáveis por API antes ou junto do portal.  
+  Descrição: todos os fluxos essenciais de frontend administrativo e operação devem ser executáveis por API antes ou junto do portal.  
   Prioridade: Must.  
   Dependências: R003.  
   Critérios de aceite: OpenAPI documenta contratos, scopes, erros, payloads e exemplos.
@@ -152,17 +158,17 @@ Impactos em auditoria:
 - **RT-006 — Segurança**: validar JWT/API key/OAuth scopes; aplicar autorização por policy; mascarar secrets, códigos e PII; usar Azure Key Vault para segredos.
 - **RT-007 — Outbox/Inbox**: toda ação que gera evento deve gravar outbox na mesma transação; consumers devem deduplicar por message id.
 - **RT-008 — Performance**: listagens devem ser paginadas; queries devem usar índices compostos; endpoints críticos devem ter metas de p95 definidas; filtros JSONB devem ser seletivos.
-- **RT-009 — Frontend React/TypeScript/Vite**: implementar feature isolada em `frontend/src/features/plataforma-apis-credenciais-oauth` com client tipado, hooks, rotas protegidas e tratamento de erro padronizado.
+- **RT-009 — Frontend React/TypeScript/Vite**: implementar feature isolada em `frontend/src/features/portal-administrativo-experiencia-operacional` com client tipado, hooks, rotas protegidas e tratamento de erro padronizado.
 - **RT-010 — Docker/configuração**: variáveis por ambiente, health checks e conexão com PostgreSQL/Redis/Key Vault devem estar documentadas e testáveis via Docker Compose.
 
 ## 8. Modelo de dados sugerido
 
-- `ApiCredential`: credencial técnica. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
-- `OAuthClient`: cliente OAuth. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
-- `ApiScope`: escopo. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
-- `IdempotencyRecord`: registro idempotente. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
-- `RateLimitBucket`: janela de limite. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
-- `ApiRequestLog`: log técnico. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
+- `NavigationConfig`: menu. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
+- `UserPreference`: preferência. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
+- `SavedFilter`: filtro salvo. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
+- `UiPermission`: permissão visual. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
+- `FeatureFlagExposure`: exposição de feature. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
+- `OperationTimeline`: timeline. Campos sugeridos: `id uuid PK`, `account_id uuid`, `project_id uuid`, `status text`, `metadata jsonb`, `created_at timestamptz`, `updated_at timestamptz`, `row_version xmin/bytea`.
 
 Relacionamentos sugeridos:
 - Toda entidade operacional referencia `accounts(id)` por `account_id` e, quando aplicável, `projects(id)` por `project_id`.
@@ -184,41 +190,41 @@ Campos de auditoria:
 
 ## 9. APIs sugeridas
 
-- `GET /api/v1/developer`  
-  Objetivo: listar recursos de integração API-first, credenciais e autorização técnica com paginação server-side.  
-  Autenticação exigida: Bearer JWT ou API key com scope `r003:read`.  
+- `GET /api/v1/ui`  
+  Objetivo: listar recursos de frontend administrativo e operação com paginação server-side.  
+  Autenticação exigida: Bearer JWT ou API key com scope `r026:read`.  
   Request: query `page`, `pageSize`, `sort`, filtros por `status`, `createdAt`, `updatedAt`, `metadata`.  
   Response: `items[]`, `page`, `pageSize`, `total`, `requestId`.  
   Erros: `401 unauthorized`, `403 forbidden`, `429 rate_limit_exceeded`.  
   Idempotência: não aplicável.
 
-- `POST /api/v1/developer`  
+- `POST /api/v1/ui`  
   Objetivo: criar recurso principal do requisito.  
-  Autenticação exigida: Bearer JWT ou API key server-side com scope `r003:write`.  
+  Autenticação exigida: Bearer JWT ou API key server-side com scope `r026:write`.  
   Request: payload com `accountId`, `projectId` quando aplicável, atributos de domínio, `metadata`, `idempotencyKey` para operação crítica.  
   Response: recurso criado, `id`, `status`, `createdAt`, `correlationId`.  
   Erros: `400 validation_error`, `409 duplicate_or_conflict`, `422 business_rule_violation`.  
   Idempotência: obrigatório em criação operacional ou importação; a mesma chave deve retornar o mesmo resultado.
 
-- `GET /api/v1/developer/{id}`  
+- `GET /api/v1/ui/{id}`  
   Objetivo: consultar detalhe, timeline resumida e estado atual.  
-  Autenticação exigida: scope `r003:read` e acesso ao `account_id/project_id`.  
+  Autenticação exigida: scope `r026:read` e acesso ao `account_id/project_id`.  
   Request: path `id`, query opcional `expand=audit,timeline,metadata`.  
   Response: recurso completo, relacionamentos permitidos e `requestId`.  
   Erros: `404 not_found`, `403 forbidden`.  
   Idempotência: não aplicável.
 
-- `PATCH /api/v1/developer/{id}`  
+- `PATCH /api/v1/ui/{id}`  
   Objetivo: alterar campos permitidos respeitando estado e concorrência.  
-  Autenticação exigida: scope `r003:write`.  
+  Autenticação exigida: scope `r026:write`.  
   Request: JSON Merge Patch, `rowVersion`/`If-Match`, `metadata`, motivo quando ação crítica.  
   Response: recurso atualizado e nova versão.  
   Erros: `409 concurrency_conflict`, `422 invalid_state_transition`, `403 forbidden`.  
   Idempotência: recomendada para alterações operacionais repetíveis.
 
-- `POST /api/v1/developer/{id}/actions/{action}`  
+- `POST /api/v1/ui/{id}/actions/{action}`  
   Objetivo: executar ação de domínio, como publicar, ativar, pausar, cancelar, expirar, reprocessar, aprovar, revogar ou simular.  
-  Autenticação exigida: scope `r003:execute` e permissão funcional específica.  
+  Autenticação exigida: scope `r026:execute` e permissão funcional específica.  
   Request: `action`, `reason`, `effectiveAt`, `idempotencyKey`, `metadata`.  
   Response: `operationId`, estado final, eventos gerados e warnings.  
   Erros: `409 conflict`, `422 business_rule_violation`, `423 locked`, `429 rate_limit_exceeded`.  
@@ -226,59 +232,59 @@ Campos de auditoria:
 
 ## 10. Eventos e webhooks
 
-- **`api_credential.created`**  
-  Quando ocorre: após criação de credencial ou mudança relevante no domínio de integração API-first, credenciais e autorização técnica.  
+- **`portal.route_opened`**  
+  Quando ocorre: após controle visual por permissão ou mudança relevante no domínio de frontend administrativo e operação.  
   Payload mínimo: `eventId`, `eventType`, `occurredAt`, `accountId`, `projectId`, `entityId`, `entityType`, `actorId`, `correlationId`, `version`, `metadata`.  
   Deve gerar webhook: sim, quando o projeto tiver assinatura ativa para esse evento.  
   Deve entrar em outbox: sim, obrigatoriamente na mesma transação da mudança.
 
-- **`api_credential.rotated`**  
-  Quando ocorre: após criação de credencial ou mudança relevante no domínio de integração API-first, credenciais e autorização técnica.  
+- **`saved_filter.created`**  
+  Quando ocorre: após controle visual por permissão ou mudança relevante no domínio de frontend administrativo e operação.  
   Payload mínimo: `eventId`, `eventType`, `occurredAt`, `accountId`, `projectId`, `entityId`, `entityType`, `actorId`, `correlationId`, `version`, `metadata`.  
   Deve gerar webhook: sim, quando o projeto tiver assinatura ativa para esse evento.  
   Deve entrar em outbox: sim, obrigatoriamente na mesma transação da mudança.
 
-- **`oauth_client.revoked`**  
-  Quando ocorre: após criação de credencial ou mudança relevante no domínio de integração API-first, credenciais e autorização técnica.  
+- **`bulk_action.confirmed`**  
+  Quando ocorre: após controle visual por permissão ou mudança relevante no domínio de frontend administrativo e operação.  
   Payload mínimo: `eventId`, `eventType`, `occurredAt`, `accountId`, `projectId`, `entityId`, `entityType`, `actorId`, `correlationId`, `version`, `metadata`.  
   Deve gerar webhook: sim, quando o projeto tiver assinatura ativa para esse evento.  
   Deve entrar em outbox: sim, obrigatoriamente na mesma transação da mudança.
 
-- **`rate_limit.exceeded`**  
-  Quando ocorre: após criação de credencial ou mudança relevante no domínio de integração API-first, credenciais e autorização técnica.  
+- **`ui_error.occurred`**  
+  Quando ocorre: após controle visual por permissão ou mudança relevante no domínio de frontend administrativo e operação.  
   Payload mínimo: `eventId`, `eventType`, `occurredAt`, `accountId`, `projectId`, `entityId`, `entityType`, `actorId`, `correlationId`, `version`, `metadata`.  
   Deve gerar webhook: sim, quando o projeto tiver assinatura ativa para esse evento.  
   Deve entrar em outbox: sim, obrigatoriamente na mesma transação da mudança.
 
 ## 11. Auditoria
 
-- Ação: criação de credencial.  
+- Ação: controle visual por permissão.  
   Ator: usuário autenticado, API credential ou worker identificado.  
-  Entidade afetada: recurso principal de integração API-first, credenciais e autorização técnica.  
+  Entidade afetada: recurso principal de frontend administrativo e operação.  
   Antes/depois: obrigatório para alteração; snapshot resumido para criação/execução.  
   correlationId: obrigatório.  
   Severidade: Medium.
-- Ação: rotação de segredo.  
+- Ação: submissão de formulário.  
   Ator: usuário autenticado, API credential ou worker identificado.  
-  Entidade afetada: recurso principal de integração API-first, credenciais e autorização técnica.  
+  Entidade afetada: recurso principal de frontend administrativo e operação.  
   Antes/depois: obrigatório para alteração; snapshot resumido para criação/execução.  
   correlationId: obrigatório.  
   Severidade: High.
-- Ação: validação de idempotency key.  
+- Ação: preview/diff.  
   Ator: usuário autenticado, API credential ou worker identificado.  
-  Entidade afetada: recurso principal de integração API-first, credenciais e autorização técnica.  
+  Entidade afetada: recurso principal de frontend administrativo e operação.  
   Antes/depois: obrigatório para alteração; snapshot resumido para criação/execução.  
   correlationId: obrigatório.  
   Severidade: High.
-- Ação: emissão de token OAuth.  
+- Ação: paginação server-side.  
   Ator: usuário autenticado, API credential ou worker identificado.  
-  Entidade afetada: recurso principal de integração API-first, credenciais e autorização técnica.  
+  Entidade afetada: recurso principal de frontend administrativo e operação.  
   Antes/depois: obrigatório para alteração; snapshot resumido para criação/execução.  
   correlationId: obrigatório.  
   Severidade: Medium.
-- Ação: bloqueio por rate limit.  
+- Ação: exibição de correlationId.  
   Ator: usuário autenticado, API credential ou worker identificado.  
-  Entidade afetada: recurso principal de integração API-first, credenciais e autorização técnica.  
+  Entidade afetada: recurso principal de frontend administrativo e operação.  
   Antes/depois: obrigatório para alteração; snapshot resumido para criação/execução.  
   correlationId: obrigatório.  
   Severidade: Critical.
@@ -286,11 +292,11 @@ Campos de auditoria:
 ## 12. Frontend / UX
 
 Rotas:
-- `/developers`: listagem principal.
-- `/developers/new`: criação.
-- `/developers/:id`: detalhe com abas de visão geral, configuração, timeline e auditoria.
-- `/developers/:id/edit`: edição controlada por estado.
-- `/developers/:id/actions`: ações críticas, quando fizer sentido.
+- `/`: listagem principal.
+- `//new`: criação.
+- `//:id`: detalhe com abas de visão geral, configuração, timeline e auditoria.
+- `//:id/edit`: edição controlada por estado.
+- `//:id/actions`: ações críticas, quando fizer sentido.
 
 Componentes:
 - Tabela com paginação server-side, ordenação, seleção de colunas, filtros por status/período/metadata e ação de exportar.
@@ -306,7 +312,7 @@ Componentes:
 
 Server-side:
 - `accountId` e `projectId` obrigatórios e compatíveis com o contexto.
-- Campos obrigatórios do domínio de integração API-first, credenciais e autorização técnica não podem ser nulos ou vazios.
+- Campos obrigatórios do domínio de frontend administrativo e operação não podem ser nulos ou vazios.
 - `metadata` deve respeitar schema publicado do projeto.
 - IDs externos devem respeitar unicidade por tenant/projeto.
 - Estados e transições devem respeitar máquina de estado do requisito.
@@ -324,7 +330,7 @@ Client-side:
 ## 14. Cenários de teste
 
 - **Unitário — regras de domínio**  
-  Given recurso em estado permitido; When executar criação de credencial; Then estado, eventos e validações devem ser consistentes.
+  Given recurso em estado permitido; When executar controle visual por permissão; Then estado, eventos e validações devem ser consistentes.
 
 - **Unitário — regra inválida**  
   Given payload sem campo obrigatório; When validar comando; Then retornar erro de validação sem acessar banco.
@@ -361,10 +367,10 @@ Logs:
 - Não registrar PII completa, secrets, códigos sensíveis ou payloads de webhook sem sanitização.
 
 Métricas:
-- `voucher_system_r003_requests_total`
-- `voucher_system_r003_failures_total`
-- `voucher_system_r003_operation_duration_ms`
-- `voucher_system_r003_business_events_total`
+- `voucher_system_r026_requests_total`
+- `voucher_system_r026_failures_total`
+- `voucher_system_r026_operation_duration_ms`
+- `voucher_system_r026_business_events_total`
 - Métricas específicas de domínio para contadores, saldos, volume, erros de validação ou backlog quando aplicável.
 
 Traces:
@@ -372,8 +378,8 @@ Traces:
 - Propagar `correlationId` para webhooks e async actions.
 
 Application Insights:
-- Custom event `R003.PlataformaDeApisCredenciaisEOauth.OperationCompleted`.
-- Custom event `R003.BusinessRuleViolation`.
+- Custom event `R026.PortalAdministrativoEExperienciaOperacional.OperationCompleted`.
+- Custom event `R026.BusinessRuleViolation`.
 - Custom metric de latência p50/p95/p99 por operação crítica.
 
 Alertas sugeridos:
@@ -405,7 +411,7 @@ Alertas sugeridos:
   Probabilidade: baixa/média.  
   Mitigação: middleware obrigatório de correlationId e audit interceptor na camada application/infrastructure.
 
-- Risco: regras de estado mal definidas para integração API-first, credenciais e autorização técnica.  
+- Risco: regras de estado mal definidas para frontend administrativo e operação.  
   Impacto: médio.  
   Probabilidade: média.  
   Mitigação: máquina de estados explícita, testes unitários por transição e mensagens de erro padronizadas.
@@ -418,7 +424,7 @@ Decisões pendentes:
 
 ## 17. Critérios de aceite finais
 
-- Todos os endpoints definidos para integração API-first, credenciais e autorização técnica estão implementados, documentados em OpenAPI e protegidos por autenticação/autorização.
+- Todos os endpoints definidos para frontend administrativo e operação estão implementados, documentados em OpenAPI e protegidos por autenticação/autorização.
 - Todas as operações críticas têm idempotência, audit log, eventos de domínio e correlationId.
 - Modelo de dados possui `account_id`, `project_id` quando aplicável, índices, constraints e campos de auditoria.
 - Frontend possui listagem, detalhe, criação/edição, estados de loading/error/empty e controle visual por permissão.
@@ -429,30 +435,30 @@ Decisões pendentes:
 
 ## 18. Arquivos que provavelmente serão alterados/criados
 
-- `src/VoucherSystem.Domain/PlataformaApisCredenciaisOauth/...`
-- `src/VoucherSystem.Application/PlataformaApisCredenciaisOauth/Commands/...`
-- `src/VoucherSystem.Application/PlataformaApisCredenciaisOauth/Queries/...`
-- `src/VoucherSystem.Api/Endpoints/PlataformaApisCredenciaisOauth/...`
+- `src/VoucherSystem.Domain/PortalAdministrativoExperienciaOperacional/...`
+- `src/VoucherSystem.Application/PortalAdministrativoExperienciaOperacional/Commands/...`
+- `src/VoucherSystem.Application/PortalAdministrativoExperienciaOperacional/Queries/...`
+- `src/VoucherSystem.Api/Endpoints/PortalAdministrativoExperienciaOperacional/...`
 - `src/VoucherSystem.Infrastructure/Persistence/Configurations/...`
 - `src/VoucherSystem.Infrastructure/Migrations/...`
 - `src/VoucherSystem.Infrastructure/Observability/...`
-- `src/VoucherSystem.Workers/PlataformaApisCredenciaisOauth/...`
-- `frontend/src/features/plataforma-apis-credenciais-oauth/...`
+- `src/VoucherSystem.Workers/PortalAdministrativoExperienciaOperacional/...`
+- `frontend/src/features/portal-administrativo-experiencia-operacional/...`
 - `frontend/src/routes/...`
-- `docs/requisitos/R003 - PLATAFORMA-APIS-CREDENCIAIS-OAUTH.md`
-- `tests/VoucherSystem.UnitTests/PlataformaApisCredenciaisOauth/...`
-- `tests/VoucherSystem.IntegrationTests/PlataformaApisCredenciaisOauth/...`
-- `tests/VoucherSystem.ApiTests/PlataformaApisCredenciaisOauth/...`
-- `frontend/tests/plataforma-apis-credenciais-oauth/...`
+- `docs/requisitos/R026 - PORTAL-ADMINISTRATIVO-EXPERIENCIA-OPERACIONAL.md`
+- `tests/VoucherSystem.UnitTests/PortalAdministrativoExperienciaOperacional/...`
+- `tests/VoucherSystem.IntegrationTests/PortalAdministrativoExperienciaOperacional/...`
+- `tests/VoucherSystem.ApiTests/PortalAdministrativoExperienciaOperacional/...`
+- `frontend/tests/portal-administrativo-experiencia-operacional/...`
 
 ## 19. Plano incremental de implementação
 
 - **Iteração 1 — Modelo de domínio e persistência**  
-  Objetivo: criar entidades, enums, constraints, migrations e repositórios/query services para integração API-first, credenciais e autorização técnica.  
+  Objetivo: criar entidades, enums, constraints, migrations e repositórios/query services para frontend administrativo e operação.  
   Arquivos prováveis: Domain, Infrastructure/Persistence, migrations e testes de integração.  
   Testes esperados: criação de banco, constraints, isolamento tenant-aware e concorrência básica.  
   Critério de aceite: migration sobe e desce localmente; queries respeitam account/project; modelo compila sem warnings.  
-  Dependências: R001, R002.
+  Dependências: Todos os módulos expostos.
 
 - **Iteração 2 — Casos de uso e regras de negócio**  
   Objetivo: implementar comandos/queries, validações, máquina de estados, idempotência e audit log.  
