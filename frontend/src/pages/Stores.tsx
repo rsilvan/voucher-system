@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import type { StoreSummaryResponse } from '../lib/types';
+import Card from '../components/Card';
 
 export default function StoresPage({ projectId }: { projectId?: string }) {
   const pid = projectId || localStorage.getItem('currentProjectId') || '';
@@ -62,7 +63,7 @@ function StoreCard({ store, projectId, onUpdated }: { store: StoreSummaryRespons
   const statusColor = store.status === 'Active' ? 'text-green-400' : store.status === 'Inactive' ? 'text-red-400' : 'text-slate-400';
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 hover:border-slate-700 transition">
+    <Card hover>
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -83,7 +84,7 @@ function StoreCard({ store, projectId, onUpdated }: { store: StoreSummaryRespons
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -105,7 +106,7 @@ function StoreModal({ projectId, onClose, onCreated }: { projectId: string; onCl
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-lg mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Nova Loja</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -155,7 +156,7 @@ function StoreModal({ projectId, onClose, onCreated }: { projectId: string; onCl
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

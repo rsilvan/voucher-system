@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import Card from '../components/Card';
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -40,7 +41,7 @@ export default function CampaignsPage() {
       ) : (
         <div className="space-y-3">
           {campaigns.map((c: any) => (
-            <div key={c.id} className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+            <Card key={c.id} hover>
               <h3 className="text-white font-semibold">{c.name}</h3>
               <div className="flex gap-2 mt-2 text-sm text-slate-400">
                 <span className={`px-2 py-0.5 rounded text-xs font-medium border ${
@@ -52,7 +53,7 @@ export default function CampaignsPage() {
                 <span className="text-slate-500">{c.type}</span>
                 {c.startAt && <span className="text-slate-600">Início: {new Date(c.startAt).toLocaleDateString('pt-BR')}</span>}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -86,7 +87,7 @@ function CreateCampaignModal({ projectId, onClose, onCreated }: { projectId: str
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-md mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Nova Campanha</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -126,7 +127,7 @@ function CreateCampaignModal({ projectId, onClose, onCreated }: { projectId: str
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

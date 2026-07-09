@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import Card from '../components/Card';
 
 export default function VouchersPage() {
   const [vouchers, setVouchers] = useState<any[]>([]);
@@ -40,7 +41,7 @@ export default function VouchersPage() {
       ) : (
         <div className="space-y-3">
           {vouchers.map((v: any) => (
-            <div key={v.id} className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+            <Card key={v.id} hover>
               <div className="flex items-center gap-3">
                 <span className="text-white font-mono font-semibold">{v.code}</span>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium border ${
@@ -54,7 +55,7 @@ export default function VouchersPage() {
               <div className="text-xs text-slate-500 mt-1">
                 {v.redemptionCount}/{v.maxRedemptions ?? '∞'} usos
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -90,7 +91,7 @@ function CreateVoucherModal({ projectId, onClose, onCreated }: { projectId: stri
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-md mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Novo Voucher</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -128,7 +129,7 @@ function CreateVoucherModal({ projectId, onClose, onCreated }: { projectId: stri
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

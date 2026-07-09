@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import type { AuditLogEntry, AuditLogListResponse } from '../lib/types';
+import Card from '../components/Card';
+import DataTable, { type Column } from '../components/DataTable';
 
 const PAGE_SIZE = 20;
 
@@ -64,7 +66,6 @@ export default function AuditLogs() {
     fetchLogs();
   }, [fetchLogs]);
 
-  // Reset to page 1 when filters change
   function handleFilterChange(
     setter: React.Dispatch<React.SetStateAction<string>>,
   ) {
@@ -87,14 +88,6 @@ export default function AuditLogs() {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  if (loading && logs.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
@@ -102,6 +95,67 @@ export default function AuditLogs() {
       </div>
     );
   }
+
+  const columns: Column<AuditLogEntry>[] = [
+    {
+      key: 'timestamp',
+      header: 'Timestamp',
+      render: (log) => (
+        <span className="whitespace-nowrap">{formatTimestamp(log.createdAt)}</span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Ação',
+      render: (log) => (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-600/20 text-indigo-300 border border-indigo-800/50">
+          {log.action}
+        </span>
+      ),
+      className: 'whitespace-nowrap',
+    },
+    {
+      key: 'resourceType',
+      header: 'Tipo de Recurso',
+      className: 'whitespace-nowrap',
+    },
+    {
+      key: 'resourceId',
+      header: 'ID do Recurso',
+      render: (log) => (
+        <span className="font-mono max-w-[180px] truncate block">{log.resourceId}</span>
+      ),
+      className: 'whitespace-nowrap',
+    },
+    {
+      key: 'actor',
+      header: 'Ator',
+      render: (log) => (
+        <span className="whitespace-nowrap">
+          {log.actorUserId || <span className="text-slate-600">—</span>}
+        </span>
+      ),
+      className: 'whitespace-nowrap',
+    },
+    {
+      key: 'metadata',
+      header: 'Metadados',
+      render: (log) => (
+        <span className="max-w-[220px] truncate block">
+          {log.metadata ? (
+            <span
+              className="cursor-help border-b border-dotted border-slate-600"
+              title={JSON.stringify(log.metadata, null, 2)}
+            >
+              {JSON.stringify(log.metadata)}
+            </span>
+          ) : (
+            <span className="text-slate-600">—</span>
+          )}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div>
@@ -116,9 +170,8 @@ export default function AuditLogs() {
       </div>
 
       {/* Filters */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 mb-6">
+      <Card padding="md" className="mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Action filter */}
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">
               Ação
@@ -137,7 +190,6 @@ export default function AuditLogs() {
             </select>
           </div>
 
-          {/* Resource type filter */}
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">
               Tipo de Recurso
@@ -153,7 +205,6 @@ export default function AuditLogs() {
             />
           </div>
 
-          {/* Date start */}
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">
               Data Inicial
@@ -168,7 +219,6 @@ export default function AuditLogs() {
             />
           </div>
 
-          {/* Date end */}
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">
               Data Final
@@ -183,7 +233,6 @@ export default function AuditLogs() {
             />
           </div>
 
-          {/* Clear filters */}
           <div className="flex items-end">
             <button
               onClick={() => {
@@ -199,134 +248,26 @@ export default function AuditLogs() {
             </button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Table */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-800">
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400 whitespace-nowrap">
-                  Timestamp
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400 whitespace-nowrap">
-                  Ação
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400 whitespace-nowrap">
-                  Tipo de Recurso
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400 whitespace-nowrap">
-                  ID do Recurso
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400 whitespace-nowrap">
-                  Ator
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400 whitespace-nowrap">
-                  Metadados
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {logs.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-12 text-center text-sm text-slate-500"
-                  >
-                    Nenhum registro de auditoria encontrado.
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="hover:bg-slate-800/50 transition"
-                  >
-                    <td className="px-6 py-4 text-sm text-slate-300 whitespace-nowrap">
-                      {formatTimestamp(log.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-600/20 text-indigo-300 border border-indigo-800/50">
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-300 whitespace-nowrap">
-                      {log.resourceType}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-400 font-mono whitespace-nowrap max-w-[180px] truncate">
-                      {log.resourceId}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-300 whitespace-nowrap">
-                      {log.actorUserId || (
-                        <span className="text-slate-600">—</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-400 max-w-[220px] truncate">
-                      {log.metadata ? (
-                        <span
-                          className="cursor-help border-b border-dotted border-slate-600"
-                          title={JSON.stringify(log.metadata, null, 2)}
-                        >
-                          {JSON.stringify(log.metadata)}
-                        </span>
-                      ) : (
-                        <span className="text-slate-600">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800">
-            <p className="text-sm text-slate-400">
-              Página {page} de {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="px-3 py-1.5 text-sm rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition border border-slate-700"
-              >
-                Anterior
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const startPage = Math.max(
-                  1,
-                  Math.min(page - 2, totalPages - 4),
-                );
-                const pageNum = startPage + i;
-                if (pageNum > totalPages) return null;
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition border ${
-                      pageNum === page
-                        ? 'bg-indigo-600/20 text-indigo-300 border-indigo-800/50'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-700'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="px-3 py-1.5 text-sm rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition border border-slate-700"
-              >
-                Próximo
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <DataTable
+        columns={columns}
+        data={logs}
+        keyField="id"
+        loading={loading && logs.length === 0}
+        emptyMessage="Nenhum registro de auditoria encontrado."
+        pagination={
+          totalPages > 1
+            ? {
+                page,
+                totalPages,
+                totalCount,
+                onPageChange: setPage,
+              }
+            : undefined
+        }
+      />
 
       {/* Loading overlay on subsequent pages */}
       {loading && logs.length > 0 && (

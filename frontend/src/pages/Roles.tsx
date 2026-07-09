@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import type { Role } from '../lib/types';
+import Card from '../components/Card';
 
 export default function Roles() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -42,10 +43,7 @@ export default function Roles() {
 
       <div className="grid gap-4">
         {roles.map((role) => (
-          <div
-            key={role.id}
-            className="bg-slate-900 rounded-xl border border-slate-800 p-6 hover:border-slate-700 transition"
-          >
+          <Card key={role.id} padding="lg" hover>
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="text-lg font-semibold text-white">
@@ -71,12 +69,12 @@ export default function Roles() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         ))}
         {roles.length === 0 && (
-          <div className="bg-slate-900 rounded-xl border border-slate-800 p-8 text-center text-slate-500">
+          <Card padding="xl" className="text-center text-slate-500">
             Nenhuma role encontrada.
-          </div>
+          </Card>
         )}
       </div>
     </div>

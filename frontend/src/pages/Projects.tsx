@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import type { ProjectSummary, ProjectListResponse, CreateProjectRequest, UpdateProjectRequest } from '../lib/types';
 import { getStatusBadge, getEnvBadge, ENVIRONMENTS, CURRENCIES, TIMEZONES, LOCALES, COUNTRIES } from '../lib/types';
+import Card from '../components/Card';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -56,28 +57,28 @@ export default function ProjectsPage() {
 
       {/* Overview cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+        <Card>
           <p className="text-sm text-slate-400">Total</p>
           <p className="text-2xl font-bold text-white mt-1">{projects.length}</p>
-        </div>
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+        </Card>
+        <Card>
           <p className="text-sm text-slate-400">Ativos</p>
           <p className="text-2xl font-bold text-green-400 mt-1">
             {projects.filter(p => p.status === 'Active').length}
           </p>
-        </div>
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+        </Card>
+        <Card>
           <p className="text-sm text-slate-400">Produção</p>
           <p className="text-2xl font-bold text-amber-400 mt-1">
             {projects.filter(p => p.environment === 'Production').length}
           </p>
-        </div>
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+        </Card>
+        <Card>
           <p className="text-sm text-slate-400">Arquivados</p>
           <p className="text-2xl font-bold text-slate-400 mt-1">
             {projects.filter(p => p.status === 'Archived').length}
           </p>
-        </div>
+        </Card>
       </div>
 
       {/* Project list */}
@@ -125,7 +126,7 @@ function ProjectCard({ project, onAction }: { project: ProjectSummary; onAction:
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 hover:border-slate-700 transition">
+    <Card padding="lg" hover>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
@@ -177,7 +178,7 @@ function ProjectCard({ project, onAction }: { project: ProjectSummary; onAction:
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -212,7 +213,6 @@ function ProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
   const isProductionForm = form.environment === 'Production';
   const [confirmText, setConfirmText] = useState('');
 
-  // This is used before submit for Production confirmation
   function handlePreSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) { setError('Nome é obrigatório'); return; }
@@ -227,7 +227,7 @@ function ProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-lg mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Novo Projeto</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handlePreSubmit} className="space-y-4">
@@ -304,7 +304,7 @@ function ProjectModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -330,7 +330,7 @@ function EditModal({ projectId, onClose, onUpdated }: { projectId: string; onClo
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-lg mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Editar Projeto</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -370,7 +370,7 @@ function EditModal({ projectId, onClose, onUpdated }: { projectId: string; onClo
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

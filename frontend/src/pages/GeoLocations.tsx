@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../lib/api';
 import type { GeoLocationResponse } from '../lib/types';
+import Card from '../components/Card';
 
 export default function GeoLocationsPage({ projectId }: { projectId?: string }) {
   const pid = projectId || localStorage.getItem('currentProjectId') || '';
@@ -54,7 +55,7 @@ export default function GeoLocationsPage({ projectId }: { projectId?: string }) 
 
         <div className="lg:col-span-2">
           {selected ? (
-            <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
+            <Card padding="lg">
               <h2 className="text-lg font-semibold text-white mb-3">{selected.name}</h2>
               {selected.description && <p className="text-sm text-slate-400 mb-4">{selected.description}</p>}
               
@@ -69,11 +70,11 @@ export default function GeoLocationsPage({ projectId }: { projectId?: string }) 
                 {selected.longitude !== null && <div><span className="text-slate-500">Longitude:</span> <span className="text-slate-300">{selected.longitude}</span></div>}
                 {selected.radius !== null && <div><span className="text-slate-500">Raio:</span> <span className="text-slate-300">{selected.radius} {selected.unit || 'km'}</span></div>}
               </div>
-            </div>
+            </Card>
           ) : (
-            <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 flex items-center justify-center min-h-[200px]">
+            <Card padding="lg" className="flex items-center justify-center min-h-[200px]">
               <p className="text-slate-500">Selecione uma localização para visualizar</p>
-            </div>
+            </Card>
           )}
         </div>
       </div>
@@ -90,7 +91,6 @@ function GeoPreview({ location }: { location: GeoLocationResponse }) {
   const cy = size / 2;
 
   if (location.type === 'Circle' && location.radius) {
-    // Scale radius: max 500km = half the SVG
     const r = Math.min(location.radius, 500) / 500 * (size / 2 - 10);
     return (
       <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -107,7 +107,6 @@ function GeoPreview({ location }: { location: GeoLocationResponse }) {
       const coords = JSON.parse(location.coordinates);
       const ring = coords.coordinates?.[0] || coords[0] || [];
       if (ring.length > 2) {
-        // Normalize to fit in SVG
         const lats = ring.map((p: number[]) => p[1]);
         const lngs = ring.map((p: number[]) => p[0]);
         const minLat = Math.min(...lats), maxLat = Math.max(...lats);
@@ -121,7 +120,6 @@ function GeoPreview({ location }: { location: GeoLocationResponse }) {
           const y = size - pad - (p[1] - minLat) * scale;
           return `${x},${y}`;
         }).join(' ');
-
         return (
           <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
             <polygon points={points} fill="rgba(99, 102, 241, 0.15)" stroke="#6366f1" strokeWidth="2" />
@@ -191,7 +189,7 @@ function GeoLocationModal({ projectId, onClose, onCreated }: { projectId: string
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-lg mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Nova Localização</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -250,7 +248,7 @@ function GeoLocationModal({ projectId, onClose, onCreated }: { projectId: string
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

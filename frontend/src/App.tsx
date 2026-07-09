@@ -1,55 +1,62 @@
 import { BrowserRouter, Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Members from './pages/Members';
-import Roles from './pages/Roles';
-import Projects from './pages/Projects';
-import Brand from './pages/Brand';
-import Stores from './pages/Stores';
-import Areas from './pages/Areas';
-import GeoLocations from './pages/GeoLocations';
-import AuditLogs from './pages/AuditLogs';
-import Campaigns from './pages/Campaigns';
-import Vouchers from './pages/Vouchers';
-import Promotions from './pages/Promotions';
-import type { ReactNode } from 'react';
+import { Suspense, lazy, type ReactNode } from 'react';
+import Card from './components/Card';
+
+// Lazy-loaded page components
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Members = lazy(() => import('./pages/Members'));
+const Roles = lazy(() => import('./pages/Roles'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Brand = lazy(() => import('./pages/Brand'));
+const Stores = lazy(() => import('./pages/Stores'));
+const Areas = lazy(() => import('./pages/Areas'));
+const GeoLocations = lazy(() => import('./pages/GeoLocations'));
+const AuditLogs = lazy(() => import('./pages/AuditLogs'));
+const Campaigns = lazy(() => import('./pages/Campaigns'));
+const Vouchers = lazy(() => import('./pages/Vouchers'));
+const Promotions = lazy(() => import('./pages/Promotions'));
+
+// Lazy-loaded heavy components
+export const LazyMetadataEditor = lazy(() => import('./components/MetadataEditor'));
+export const LazyTimeline = lazy(() => import('./components/Timeline'));
+
+function PageFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
-      </div>
-    );
+    return <PageFallback />;
   }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>;
 }
 
 function PublicRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
-      </div>
-    );
+    return <PageFallback />;
   }
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>;
 }
 
 function BrandWrapper() {
@@ -126,18 +133,18 @@ function DashboardHome() {
         Você está na organização <strong className="text-slate-200">{organization?.name}</strong>.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+        <Card padding="lg">
           <p className="text-sm text-slate-400">Organização</p>
           <p className="text-xl font-bold text-white mt-1">{organization?.name}</p>
-        </div>
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+        </Card>
+        <Card padding="lg">
           <p className="text-sm text-slate-400">Email</p>
           <p className="text-xl font-bold text-white mt-1">{user?.email}</p>
-        </div>
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+        </Card>
+        <Card padding="lg">
           <p className="text-sm text-slate-400">Status</p>
           <p className="text-xl font-bold text-green-400 mt-1">Ativo</p>
-        </div>
+        </Card>
       </div>
     </div>
   );

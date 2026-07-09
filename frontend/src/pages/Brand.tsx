@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import type { BrandResponse, BrandAddress } from '../lib/types';
+import Card from '../components/Card';
 
 export default function BrandPage({ projectId }: { projectId?: string }) {
   const [brand, setBrand] = useState<BrandResponse | null>(null);
@@ -102,7 +103,7 @@ export default function BrandPage({ projectId }: { projectId?: string }) {
       {brand && !editMode && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
+            <Card padding="lg">
               <h2 className="text-lg font-semibold text-white mb-3">{brand.name}</h2>
               {brand.description && <p className="text-slate-400 text-sm mb-3">{brand.description}</p>}
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -111,10 +112,10 @@ export default function BrandPage({ projectId }: { projectId?: string }) {
                 {brand.primaryColor && <div><span className="text-slate-500">Cor primária:</span> <span className="inline-block w-4 h-4 rounded align-middle ml-1" style={{ backgroundColor: brand.primaryColor }} /> {brand.primaryColor}</div>}
                 {brand.secondaryColor && <div><span className="text-slate-500">Cor secundária:</span> <span className="inline-block w-4 h-4 rounded align-middle ml-1" style={{ backgroundColor: brand.secondaryColor }} /> {brand.secondaryColor}</div>}
               </div>
-            </div>
+            </Card>
 
             {brand.address?.street && (
-              <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
+              <Card padding="lg">
                 <h3 className="text-sm font-medium text-slate-400 mb-2">Endereço</h3>
                 <p className="text-sm text-slate-300">
                   {brand.address.street}{brand.address.city ? `, ${brand.address.city}` : ''}
@@ -122,32 +123,32 @@ export default function BrandPage({ projectId }: { projectId?: string }) {
                   {brand.address.zipCode ? `, ${brand.address.zipCode}` : ''}
                   {brand.address.country ? ` (${brand.address.country})` : ''}
                 </p>
-              </div>
+              </Card>
             )}
           </div>
 
           <div className="space-y-4">
             {brand.logoUrl && (
-              <div className="bg-slate-900 rounded-xl border border-slate-800 p-5 text-center">
+              <Card padding="lg" className="text-center">
                 <p className="text-sm text-slate-400 mb-2">Logo</p>
                 <img src={brand.logoUrl} alt="Logo" className="max-h-24 mx-auto" />
-              </div>
+              </Card>
             )}
-            <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
+            <Card padding="lg">
               <p className="text-sm text-slate-400 mb-2">Preview de cores</p>
               <div className="h-12 rounded-lg mb-2" style={{ background: `linear-gradient(135deg, ${brand.primaryColor || '#6366f1'}, ${brand.secondaryColor || '#8b5cf6'})` }} />
               <div className="flex gap-2">
                 <button className="px-3 py-1 text-xs text-white rounded" style={{ backgroundColor: brand.primaryColor ?? undefined }}>Primária</button>
                 <button className="px-3 py-1 text-xs text-white rounded" style={{ backgroundColor: brand.secondaryColor ?? undefined }}>Secundária</button>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       )}
 
       {/* Edit/Create form */}
       {(editMode || !brand) && (
-        <div className="bg-slate-900 rounded-xl border border-slate-800 p-6">
+        <Card padding="lg">
           <h2 className="text-lg font-semibold text-white mb-4">{brand ? 'Editar Marca' : 'Criar Marca'}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -244,7 +245,7 @@ export default function BrandPage({ projectId }: { projectId?: string }) {
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
-        </div>
+        </Card>
       )}
     </div>
   );

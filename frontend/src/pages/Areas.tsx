@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import type { AreaResponse } from '../lib/types';
+import Card from '../components/Card';
 
 export default function AreasPage({ projectId }: { projectId?: string }) {
   const pid = projectId || localStorage.getItem('currentProjectId') || '';
@@ -54,7 +55,7 @@ function AreaNode({ area, allAreas, projectId, onUpdated, depth }: { area: AreaR
 
   return (
     <div>
-      <div className="flex items-center justify-between bg-slate-900 rounded-lg border border-slate-800 px-4 py-3 hover:border-slate-700 transition" style={{ marginLeft: depth * 20 }}>
+      <Card className="flex items-center justify-between hover:border-slate-700" style={{ marginLeft: depth * 20 }}>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-white">{area.name}</span>
           {area.storeCount !== null && area.storeCount !== undefined && (
@@ -63,7 +64,7 @@ function AreaNode({ area, allAreas, projectId, onUpdated, depth }: { area: AreaR
           <span className="text-xs text-slate-600">nível {area.depth || 0}</span>
         </div>
         <button onClick={() => onUpdated()} className="text-xs text-slate-500 hover:text-indigo-400">editar</button>
-      </div>
+      </Card>
       {children.map(child => (
         <AreaNode key={child.id} area={child} allAreas={allAreas} projectId={projectId} onUpdated={onUpdated} depth={depth + 1} />
       ))}
@@ -89,7 +90,7 @@ function AreaModal({ projectId, areas, onClose, onCreated }: { projectId: string
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-md mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Nova Área</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -119,7 +120,7 @@ function AreaModal({ projectId, areas, onClose, onCreated }: { projectId: string
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import Card from '../components/Card';
 
 export default function PromotionsPage() {
   const [promotions, setPromotions] = useState<any[]>([]);
@@ -40,7 +41,7 @@ export default function PromotionsPage() {
       ) : (
         <div className="space-y-3">
           {promotions.map((p: any) => (
-            <div key={p.id} className="bg-slate-900 rounded-xl border border-slate-800 p-4">
+            <Card key={p.id} hover>
               <div className="flex items-center gap-3">
                 <h3 className="text-white font-semibold">{p.name}</h3>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium border ${
@@ -50,7 +51,7 @@ export default function PromotionsPage() {
                 }`}>{p.status}</span>
               </div>
               <p className="text-sm text-slate-400 mt-1">{p.type} · Prioridade {p.priority}</p>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -95,7 +96,7 @@ function CreatePromotionModal({ projectId, onClose, onCreated }: { projectId: st
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
+      <Card className="w-full max-w-md mx-4" padding="lg" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <h2 className="text-lg font-bold text-white mb-4">Nova Promoção</h2>
         {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -147,7 +148,7 @@ function CreatePromotionModal({ projectId, onClose, onCreated }: { projectId: st
             </button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
