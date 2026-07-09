@@ -125,7 +125,7 @@ public class CampaignService : ICampaignService
 
         var validTransitions = GetValidTransitions(campaign.Status);
         if (!validTransitions.Contains(action))
-            throw new InvalidOperationException($"Cannot transition from '{campaign.Status}' to '{action}'.");
+            throw new CampaignStateMachineException($"Cannot transition campaign from '{campaign.Status}' to '{action}'.");
 
         campaign.Status = action switch
         {

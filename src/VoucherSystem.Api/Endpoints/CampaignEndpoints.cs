@@ -2,6 +2,7 @@ using VoucherSystem.Contracts;
 using VoucherSystem.Contracts.Campaigns;
 using VoucherSystem.Application;
 using VoucherSystem.Api.Middleware;
+using System.Diagnostics;
 
 namespace VoucherSystem.Api.Endpoints;
 
@@ -73,9 +74,26 @@ public static class CampaignEndpoints
             {
                 return Results.BadRequest(new ErrorResponse { Error = ex.Message });
             }
+            catch (CampaignStateMachineException ex)
+            {
+                return Results.BadRequest(new ErrorResponse { Error = ex.Message, Detail = "Invalid state transition" });
+            }
             catch (InvalidOperationException ex)
             {
                 return Results.Json(new ErrorResponse { Error = ex.Message }, statusCode: 422);
+            }
+            catch (Exception ex)
+            {
+                var requestId = Activity.Current?.Id ?? ctx.TraceIdentifier;
+                return Results.Problem(
+                    detail: ex.Message,
+                    statusCode: 500,
+                    title: "An unexpected error occurred",
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+                    extensions: new Dictionary<string, object?>
+                    {
+                        ["requestId"] = requestId
+                    });
             }
         }).RequireAuthorization().RequirePermission("campaigns.update");
 
